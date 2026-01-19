@@ -179,9 +179,9 @@ function InfoItem({
   if (!value) return null;
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3 min-w-0">
       {Icon && (
-        <div className="mt-0.5 p-2 rounded-lg bg-primary/10">
+        <div className="mt-0.5 p-2 rounded-lg bg-primary/10 shrink-0">
           <Icon className="h-4 w-4 text-primary" />
         </div>
       )}
@@ -189,14 +189,14 @@ function InfoItem({
         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
           {label}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <p className="text-sm font-medium text-foreground">
+        <div className="flex items-center gap-2 mt-0.5 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate" title={showValue ? value : undefined}>
             {showValue ? value : "••••••••"}
           </p>
           {masked && (
             <button
               onClick={() => setShowValue(!showValue)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               {showValue ? (
                 <EyeOff className="h-3.5 w-3.5" />
@@ -229,14 +229,14 @@ function SimpleInfoItem({
       <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
         {label}
       </p>
-      <div className="flex items-center gap-2 mt-0.5">
-        <p className="text-sm font-medium text-foreground">
+      <div className="flex items-center gap-2 mt-0.5 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate" title={showValue ? value : undefined}>
           {showValue ? value : "••••••••"}
         </p>
         {masked && (
           <button
             onClick={() => setShowValue(!showValue)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             {showValue ? (
               <EyeOff className="h-3.5 w-3.5" />
@@ -432,19 +432,23 @@ export default function MyInfo() {
               </div>
             </div>
 
-            {/* Email Addresses */}
-            <div className="pt-3 border-t border-border/50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <InfoItem
-                  icon={Mail}
-                  label="Email 1"
-                  value={employeeData.email1}
-                />
-                {employeeData.email2 && (
-                  <SimpleInfoItem label="Email 2" value={employeeData.email2} />
-                )}
-              </div>
-            </div>
+                  {/* Email Addresses */}
+                  <div className="pt-3 border-t border-border/50">
+                    <div className="space-y-4">
+                      <InfoItem
+                        icon={Mail}
+                        label="Email 1"
+                        value={employeeData.email1}
+                      />
+                      {employeeData.email2 && (
+                        <InfoItem
+                          icon={Mail}
+                          label="Email 2"
+                          value={employeeData.email2}
+                        />
+                      )}
+                    </div>
+                  </div>
           </div>
         </SectionCard>
 
