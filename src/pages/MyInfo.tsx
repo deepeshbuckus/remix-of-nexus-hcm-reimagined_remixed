@@ -282,6 +282,14 @@ export default function MyInfo() {
     profile.personalInfo.profilePictureMediaType
   );
 
+  // Debug logging for profile picture
+  console.log('Profile Picture Debug:', {
+    hasProfilePicture: !!profile.personalInfo.profilePicture,
+    rawPicturePreview: profile.personalInfo.profilePicture?.substring(0, 50) + '...',
+    mediaType: profile.personalInfo.profilePictureMediaType,
+    constructedUrl: avatarUrl ? avatarUrl.substring(0, 80) + '...' : null,
+  });
+
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
       {/* Profile Header */}
@@ -290,7 +298,11 @@ export default function MyInfo() {
         <CardContent className="relative pt-0 pb-6 px-6">
           <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12">
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-              <AvatarImage src={avatarUrl ?? undefined} alt={fullName} />
+              <AvatarImage 
+                src={avatarUrl ?? undefined} 
+                alt={fullName}
+                onLoadingStatusChange={(status) => console.log('Avatar loading status:', status)}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                 {profile.personalInfo.firstName[0]}
                 {profile.personalInfo.lastName[0]}
