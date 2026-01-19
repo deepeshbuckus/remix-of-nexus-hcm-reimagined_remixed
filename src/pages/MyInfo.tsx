@@ -37,7 +37,6 @@ import {
   Hash,
   AlertCircle,
 } from "lucide-react";
-import profileAvatar from "@/assets/profile-avatar.jpg";
 import { useEmployeeProfile } from "@/hooks/useEmployeeProfile";
 import {
   extractMiddleInitial,
@@ -47,6 +46,7 @@ import {
   mapCountryCode,
   mapProvinceCode,
   formatFullName,
+  buildProfilePictureUrl,
 } from "@/utils/profileTransformers";
 
 // Re-export the API types for external consumers
@@ -277,6 +277,10 @@ export default function MyInfo() {
     profile.workAssignment.reportsTo.firstName,
     profile.workAssignment.reportsTo.lastName
   );
+  const avatarUrl = buildProfilePictureUrl(
+    profile.personalInfo.profilePicture,
+    profile.personalInfo.profilePictureMediaType
+  );
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
@@ -286,7 +290,7 @@ export default function MyInfo() {
         <CardContent className="relative pt-0 pb-6 px-6">
           <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12">
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-              <AvatarImage src={profileAvatar} alt={fullName} />
+              <AvatarImage src={avatarUrl ?? undefined} alt={fullName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
                 {profile.personalInfo.firstName[0]}
                 {profile.personalInfo.lastName[0]}

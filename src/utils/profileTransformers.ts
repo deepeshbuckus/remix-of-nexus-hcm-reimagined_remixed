@@ -184,3 +184,16 @@ export function formatFullName(
   const parts = [firstName, lastName].filter(Boolean);
   return parts.join(" ");
 }
+
+/**
+ * Constructs a data URL from base64 image data and media type
+ * @example buildProfilePictureUrl("/9j/4AAQ...", "image/jpeg") -> "data:image/jpeg;base64,/9j/4AAQ..."
+ * @returns Data URL string or null if inputs are invalid
+ */
+export function buildProfilePictureUrl(
+  base64: string | null | undefined,
+  mediaType: string | null | undefined
+): string | null {
+  if (!base64 || !mediaType) return null;
+  return `data:${mediaType};base64,${base64}`;
+}
