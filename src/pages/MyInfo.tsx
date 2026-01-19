@@ -33,36 +33,111 @@ import {
   Shield,
   Eye,
   EyeOff,
+  Hash,
 } from "lucide-react";
 import profileAvatar from "@/assets/profile-avatar.jpg";
 
-// Mock employee data
-const employeeData = {
-  name: "Anoushka Patel",
-  preferredName: "Anoushka",
-  employeeId: "EMP-000010",
-  jobTitle: "Senior Software Engineer",
-  department: "Engineering",
-  workLocation: "Toronto, ON",
-  email: "anoushka.patel@company.com",
-  employmentType: "Full-time",
-  startDate: "January 15, 2023",
-  birthDate: "April 11, 1990",
-  languagePreference: "English",
+// TypeScript interface for API data shape
+export interface EmployeeProfile {
+  // Personal Information
+  firstName: string;
+  middleInitial: string;
+  lastName: string;
+  preferredName: string;
+  preferredLanguage: string;
+  birthDate: string;
+  payeeName: string;
 
   // Contact Information
-  personalPhone: "(416) 555-0123",
-  personalEmail: "anoushka.personal@email.com",
-  homeAddress: {
-    street: "19 Lakeview Ave",
-    city: "Dartmouth",
-    province: "Nova Scotia",
-    postalCode: "B3A 3S8",
-    country: "Canada",
-  },
-  mailingAddress: null, // Same as home
+  street: string;
+  city: string;
+  provinceState: string;
+  postalZipCode: string;
+  country: string;
+  phone1: string;
+  phone2: string;
+  phone3: string;
+  email1: string;
+  email2: string;
 
-  // Emergency Contacts
+  // Work Assignment
+  hireDate: string;
+  employmentType: "Full Time" | "Part Time";
+  position: string;
+  department: string;
+  workLocation: string;
+  reportsTo: {
+    name: string;
+    title: string;
+    avatar?: string;
+  };
+
+  // Profile Header (display purposes)
+  employeeId: string;
+
+  // Emergency Contacts (unchanged)
+  emergencyContacts: Array<{
+    name: string;
+    relationship: string;
+    phone: string;
+  }>;
+
+  // Pay & Compensation (unchanged)
+  basePay: string;
+  directDeposit: string;
+  lastPayDate: string;
+
+  // Payroll & Tax Details (unchanged)
+  taxation: {
+    provinceOfEmployment: string;
+    federalTax: string;
+    provincialTax: string;
+    cppQppStatus: string;
+    qpip: string;
+    yearEndFormLanguage: string;
+    exemptions: string;
+  };
+}
+
+// Mock employee data matching the API shape
+const employeeData: EmployeeProfile = {
+  // Personal Information
+  firstName: "Anoushka",
+  middleInitial: "R",
+  lastName: "Patel",
+  preferredName: "Anoushka",
+  preferredLanguage: "English",
+  birthDate: "April 11, 1990",
+  payeeName: "Anoushka R. Patel",
+
+  // Contact Information
+  street: "19 Lakeview Ave",
+  city: "Dartmouth",
+  provinceState: "Nova Scotia",
+  postalZipCode: "B3A 3S8",
+  country: "Canada",
+  phone1: "(416) 555-0123",
+  phone2: "(416) 555-0456",
+  phone3: "",
+  email1: "anoushka.personal@email.com",
+  email2: "anoushka.secondary@email.com",
+
+  // Work Assignment
+  hireDate: "January 15, 2023",
+  employmentType: "Full Time",
+  position: "Senior Software Engineer",
+  department: "Engineering",
+  workLocation: "Toronto, ON",
+  reportsTo: {
+    name: "Sarah Chen",
+    title: "Engineering Manager",
+    avatar: undefined,
+  },
+
+  // Profile Header
+  employeeId: "EMP-000010",
+
+  // Emergency Contacts (unchanged)
   emergencyContacts: [
     {
       name: "Raj Patel",
@@ -71,19 +146,12 @@ const employeeData = {
     },
   ],
 
-  // Work Information
-  manager: {
-    name: "Sarah Chen",
-    avatar: null,
-    title: "Engineering Manager",
-  },
-
-  // Pay & Compensation
+  // Pay & Compensation (unchanged)
   basePay: "••••••",
   directDeposit: "TD Bank ••••4521",
   lastPayDate: "November 29, 2025",
 
-  // Payroll & Tax Details
+  // Payroll & Tax Details (unchanged)
   taxation: {
     provinceOfEmployment: "Ontario",
     federalTax: "Subject to Federal Tax",
@@ -107,6 +175,8 @@ function InfoItem({
   masked?: boolean;
 }) {
   const [showValue, setShowValue] = useState(!masked);
+
+  if (!value) return null;
 
   return (
     <div className="flex items-start gap-3">
@@ -136,6 +206,45 @@ function InfoItem({
             </button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SimpleInfoItem({
+  label,
+  value,
+  masked = false,
+}: {
+  label: string;
+  value: string;
+  masked?: boolean;
+}) {
+  const [showValue, setShowValue] = useState(!masked);
+
+  if (!value) return null;
+
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+        {label}
+      </p>
+      <div className="flex items-center gap-2 mt-0.5">
+        <p className="text-sm font-medium text-foreground">
+          {showValue ? value : "••••••••"}
+        </p>
+        {masked && (
+          <button
+            onClick={() => setShowValue(!showValue)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showValue ? (
+              <EyeOff className="h-3.5 w-3.5" />
+            ) : (
+              <Eye className="h-3.5 w-3.5" />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -173,7 +282,7 @@ function SectionCard({
 export default function MyInfo() {
   const [taxDetailsOpen, setTaxDetailsOpen] = useState(false);
 
-  const fullAddress = `${employeeData.homeAddress.street}, ${employeeData.homeAddress.city}, ${employeeData.homeAddress.province} ${employeeData.homeAddress.postalCode}`;
+  const fullName = `${employeeData.firstName} ${employeeData.middleInitial ? employeeData.middleInitial + ". " : ""}${employeeData.lastName}`;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
@@ -183,24 +292,22 @@ export default function MyInfo() {
         <CardContent className="relative pt-0 pb-6 px-6">
           <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12">
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-              <AvatarImage src={profileAvatar} alt={employeeData.name} />
+              <AvatarImage src={profileAvatar} alt={fullName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                {employeeData.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+                {employeeData.firstName[0]}
+                {employeeData.lastName[0]}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 md:pb-1">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">
-                    {employeeData.name}
+                    {fullName}
                   </h1>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Briefcase className="h-4 w-4" />
-                      {employeeData.jobTitle}
+                      {employeeData.position}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <MapPin className="h-4 w-4" />
@@ -237,8 +344,18 @@ export default function MyInfo() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <InfoItem
               icon={User}
-              label="Full Legal Name"
-              value={employeeData.name}
+              label="First Name"
+              value={employeeData.firstName}
+            />
+            <InfoItem
+              icon={Hash}
+              label="Middle Initial"
+              value={employeeData.middleInitial}
+            />
+            <InfoItem
+              icon={User}
+              label="Last Name"
+              value={employeeData.lastName}
             />
             <InfoItem
               icon={Heart}
@@ -246,16 +363,23 @@ export default function MyInfo() {
               value={employeeData.preferredName}
             />
             <InfoItem
+              icon={Globe}
+              label="Preferred Language"
+              value={employeeData.preferredLanguage}
+            />
+            <InfoItem
               icon={Cake}
-              label="Date of Birth"
+              label="Birthdate"
               value={employeeData.birthDate}
               masked
             />
-            <InfoItem
-              icon={Globe}
-              label="Language Preference"
-              value={employeeData.languagePreference}
-            />
+            <div className="sm:col-span-2">
+              <InfoItem
+                icon={CreditCard}
+                label="Payee Name"
+                value={employeeData.payeeName}
+              />
+            </div>
           </div>
         </SectionCard>
 
@@ -269,33 +393,58 @@ export default function MyInfo() {
             </Button>
           }
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <InfoItem
-              icon={Phone}
-              label="Personal Phone"
-              value={employeeData.personalPhone}
-            />
-            <InfoItem
-              icon={Mail}
-              label="Personal Email"
-              value={employeeData.personalEmail}
-            />
-            <div className="sm:col-span-2">
-              <InfoItem
-                icon={MapPin}
-                label="Home Address"
-                value={fullAddress}
-              />
-            </div>
-            {employeeData.mailingAddress && (
+          <div className="space-y-5">
+            {/* Address Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="sm:col-span-2">
                 <InfoItem
                   icon={MapPin}
-                  label="Mailing Address"
-                  value="Different mailing address"
+                  label="Street"
+                  value={employeeData.street}
                 />
               </div>
-            )}
+              <SimpleInfoItem label="City" value={employeeData.city} />
+              <SimpleInfoItem
+                label="Province/State"
+                value={employeeData.provinceState}
+              />
+              <SimpleInfoItem
+                label="Postal/Zip Code"
+                value={employeeData.postalZipCode}
+              />
+              <SimpleInfoItem label="Country" value={employeeData.country} />
+            </div>
+
+            {/* Phone Numbers */}
+            <div className="pt-3 border-t border-border/50">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <InfoItem
+                  icon={Phone}
+                  label="Phone 1"
+                  value={employeeData.phone1}
+                />
+                {employeeData.phone2 && (
+                  <SimpleInfoItem label="Phone 2" value={employeeData.phone2} />
+                )}
+                {employeeData.phone3 && (
+                  <SimpleInfoItem label="Phone 3" value={employeeData.phone3} />
+                )}
+              </div>
+            </div>
+
+            {/* Email Addresses */}
+            <div className="pt-3 border-t border-border/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <InfoItem
+                  icon={Mail}
+                  label="Email 1"
+                  value={employeeData.email1}
+                />
+                {employeeData.email2 && (
+                  <SimpleInfoItem label="Email 2" value={employeeData.email2} />
+                )}
+              </div>
+            </div>
           </div>
         </SectionCard>
 
@@ -343,29 +492,45 @@ export default function MyInfo() {
           )}
         </SectionCard>
 
-        {/* Work Information */}
-        <SectionCard title="Work Information" icon={Briefcase}>
+        {/* Work Assignment */}
+        <SectionCard title="Work Assignment" icon={Briefcase}>
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <InfoItem
+                icon={Calendar}
+                label="Hire Date"
+                value={employeeData.hireDate}
+              />
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 p-2 rounded-lg bg-primary/10">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                    Employment Type
+                  </p>
+                  <div className="mt-1">
+                    <Badge
+                      variant={
+                        employeeData.employmentType === "Full Time"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {employeeData.employmentType}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <InfoItem
                 icon={Briefcase}
-                label="Job Title"
-                value={employeeData.jobTitle}
+                label="Position"
+                value={employeeData.position}
               />
               <InfoItem
                 icon={Building2}
                 label="Department"
                 value={employeeData.department}
-              />
-              <InfoItem
-                icon={Calendar}
-                label="Start Date"
-                value={employeeData.startDate}
-              />
-              <InfoItem
-                icon={Clock}
-                label="Employment Type"
-                value={employeeData.employmentType}
               />
               <InfoItem
                 icon={MapPin}
@@ -381,16 +546,25 @@ export default function MyInfo() {
               </p>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors">
                 <Avatar className="h-10 w-10">
+                  {employeeData.reportsTo.avatar ? (
+                    <AvatarImage
+                      src={employeeData.reportsTo.avatar}
+                      alt={employeeData.reportsTo.name}
+                    />
+                  ) : null}
                   <AvatarFallback className="bg-primary/20 text-primary">
-                    SC
+                    {employeeData.reportsTo.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium text-foreground">
-                    {employeeData.manager.name}
+                    {employeeData.reportsTo.name}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {employeeData.manager.title}
+                    {employeeData.reportsTo.title}
                   </p>
                 </div>
               </div>
