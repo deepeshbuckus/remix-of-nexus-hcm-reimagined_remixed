@@ -17,6 +17,8 @@ export interface PersonalInfo {
   languagePreference: string;
   birthDate: string; // ISO format: "1990-05-15"
   payeeName: string;
+  profilePicture: string | null; // Raw base64 encoded string
+  profilePictureMediaType: string | null; // e.g., "image/jpeg"
 }
 
 export interface Contact {
