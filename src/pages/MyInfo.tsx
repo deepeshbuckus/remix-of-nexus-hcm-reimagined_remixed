@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,134 +35,22 @@ import {
   Eye,
   EyeOff,
   Hash,
+  AlertCircle,
 } from "lucide-react";
 import profileAvatar from "@/assets/profile-avatar.jpg";
+import { useEmployeeProfile } from "@/hooks/useEmployeeProfile";
+import {
+  extractMiddleInitial,
+  formatDisplayDate,
+  formatEmployeeId,
+  mapLanguageCode,
+  mapCountryCode,
+  mapProvinceCode,
+  formatFullName,
+} from "@/utils/profileTransformers";
 
-// TypeScript interface for API data shape
-export interface EmployeeProfile {
-  // Personal Information
-  firstName: string;
-  middleInitial: string;
-  lastName: string;
-  preferredName: string;
-  preferredLanguage: string;
-  birthDate: string;
-  payeeName: string;
-
-  // Contact Information
-  street: string;
-  city: string;
-  provinceState: string;
-  postalZipCode: string;
-  country: string;
-  phone1: string;
-  phone2: string;
-  phone3: string;
-  email1: string;
-  email2: string;
-
-  // Work Assignment
-  hireDate: string;
-  employmentType: "Full Time" | "Part Time";
-  position: string;
-  department: string;
-  workLocation: string;
-  reportsTo: {
-    name: string;
-    title: string;
-    avatar?: string;
-  };
-
-  // Profile Header (display purposes)
-  employeeId: string;
-
-  // Emergency Contacts (unchanged)
-  emergencyContacts: Array<{
-    name: string;
-    relationship: string;
-    phone: string;
-  }>;
-
-  // Pay & Compensation (unchanged)
-  basePay: string;
-  directDeposit: string;
-  lastPayDate: string;
-
-  // Payroll & Tax Details (unchanged)
-  taxation: {
-    provinceOfEmployment: string;
-    federalTax: string;
-    provincialTax: string;
-    cppQppStatus: string;
-    qpip: string;
-    yearEndFormLanguage: string;
-    exemptions: string;
-  };
-}
-
-// Mock employee data matching the API shape
-const employeeData: EmployeeProfile = {
-  // Personal Information
-  firstName: "Anoushka",
-  middleInitial: "R",
-  lastName: "Patel",
-  preferredName: "Anoushka",
-  preferredLanguage: "English",
-  birthDate: "April 11, 1990",
-  payeeName: "Anoushka R. Patel",
-
-  // Contact Information
-  street: "19 Lakeview Ave",
-  city: "Dartmouth",
-  provinceState: "Nova Scotia",
-  postalZipCode: "B3A 3S8",
-  country: "Canada",
-  phone1: "(416) 555-0123",
-  phone2: "(416) 555-0456",
-  phone3: "",
-  email1: "anoushka.personal@email.com",
-  email2: "anoushka.secondary@email.com",
-
-  // Work Assignment
-  hireDate: "January 15, 2023",
-  employmentType: "Full Time",
-  position: "Senior Software Engineer",
-  department: "Engineering",
-  workLocation: "Toronto, ON",
-  reportsTo: {
-    name: "Sarah Chen",
-    title: "Engineering Manager",
-    avatar: undefined,
-  },
-
-  // Profile Header
-  employeeId: "EMP-000010",
-
-  // Emergency Contacts (unchanged)
-  emergencyContacts: [
-    {
-      name: "Raj Patel",
-      relationship: "Spouse",
-      phone: "(416) 555-0456",
-    },
-  ],
-
-  // Pay & Compensation (unchanged)
-  basePay: "••••••",
-  directDeposit: "TD Bank ••••4521",
-  lastPayDate: "November 29, 2025",
-
-  // Payroll & Tax Details (unchanged)
-  taxation: {
-    provinceOfEmployment: "Ontario",
-    federalTax: "Subject to Federal Tax",
-    provincialTax: "Subject to Provincial Tax",
-    cppQppStatus: "Subject to CPP",
-    qpip: "Not Applicable",
-    yearEndFormLanguage: "English",
-    exemptions: "None",
-  },
-};
+// Re-export the API types for external consumers
+export type { ProfileResponse as EmployeeProfile } from "@/types/profile";
 
 function InfoItem({
   icon: Icon,
@@ -279,10 +168,115 @@ function SectionCard({
   );
 }
 
+function ProfileSkeleton() {
+  return (
+    <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      {/* Header Skeleton */}
+      <Card className="border-border/50 shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent h-24" />
+        <CardContent className="relative pt-0 pb-6 px-6">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-12">
+            <Skeleton className="h-24 w-24 rounded-full" />
+            <div className="flex-1 md:pb-1 space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-72" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Content Grid Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="border-border/50 shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <Skeleton className="h-6 w-32" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[1, 2, 3].map((j) => (
+                <div key={j} className="flex items-start gap-3">
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProfileError({ message }: { message: string }) {
+  return (
+    <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto">
+      <Card className="border-destructive/50 shadow-sm">
+        <CardContent className="flex items-center gap-4 py-8">
+          <div className="p-3 rounded-full bg-destructive/10">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Unable to load profile
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">{message}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Mock data for Pay & Compensation (not from API yet)
+const payData = {
+  basePay: "••••••",
+  directDeposit: "TD Bank ••••4521",
+  lastPayDate: "November 29, 2025",
+  taxation: {
+    provinceOfEmployment: "Ontario",
+    federalTax: "Subject to Federal Tax",
+    provincialTax: "Subject to Provincial Tax",
+    cppQppStatus: "Subject to CPP",
+    qpip: "Not Applicable",
+    yearEndFormLanguage: "English",
+    exemptions: "None",
+  },
+};
+
 export default function MyInfo() {
   const [taxDetailsOpen, setTaxDetailsOpen] = useState(false);
+  const { data: profile, isLoading, error } = useEmployeeProfile();
 
-  const fullName = `${employeeData.firstName} ${employeeData.middleInitial ? employeeData.middleInitial + ". " : ""}${employeeData.lastName}`;
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
+
+  if (error || !profile) {
+    return <ProfileError message={error?.message || "Profile data not found"} />;
+  }
+
+  // Transform API data for display
+  const middleInitial = extractMiddleInitial(profile.personalInfo.middleName);
+  const fullName = `${profile.personalInfo.firstName} ${middleInitial ? middleInitial + ". " : ""}${profile.personalInfo.lastName}`;
+  const employeeId = formatEmployeeId(profile.employeeNumber);
+  const birthDate = formatDisplayDate(profile.personalInfo.birthDate);
+  const hireDate = formatDisplayDate(profile.workAssignment.hireDate);
+  const preferredLanguage = mapLanguageCode(profile.personalInfo.languagePreference);
+  const country = mapCountryCode(profile.contact.address.countryCode);
+  const provinceState = mapProvinceCode(
+    profile.contact.address.provinceCode,
+    profile.contact.address.countryCode
+  );
+  const managerName = formatFullName(
+    profile.workAssignment.reportsTo.firstName,
+    profile.workAssignment.reportsTo.lastName
+  );
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
@@ -294,8 +288,8 @@ export default function MyInfo() {
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
               <AvatarImage src={profileAvatar} alt={fullName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-                {employeeData.firstName[0]}
-                {employeeData.lastName[0]}
+                {profile.personalInfo.firstName[0]}
+                {profile.personalInfo.lastName[0]}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 md:pb-1">
@@ -307,15 +301,15 @@ export default function MyInfo() {
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Briefcase className="h-4 w-4" />
-                      {employeeData.position}
+                      {profile.workAssignment.position.name}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <MapPin className="h-4 w-4" />
-                      {employeeData.workLocation}
+                      {profile.workAssignment.workLocation.name}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <BadgeCheck className="h-4 w-4" />
-                      {employeeData.employeeId}
+                      {employeeId}
                     </span>
                   </div>
                 </div>
@@ -345,39 +339,39 @@ export default function MyInfo() {
             <InfoItem
               icon={User}
               label="First Name"
-              value={employeeData.firstName}
+              value={profile.personalInfo.firstName}
             />
             <InfoItem
               icon={Hash}
               label="Middle Initial"
-              value={employeeData.middleInitial}
+              value={middleInitial}
             />
             <InfoItem
               icon={User}
               label="Last Name"
-              value={employeeData.lastName}
+              value={profile.personalInfo.lastName}
             />
             <InfoItem
               icon={Heart}
               label="Preferred Name"
-              value={employeeData.preferredName}
+              value={profile.personalInfo.preferredName}
             />
             <InfoItem
               icon={Globe}
               label="Preferred Language"
-              value={employeeData.preferredLanguage}
+              value={preferredLanguage}
             />
             <InfoItem
               icon={Cake}
               label="Birthdate"
-              value={employeeData.birthDate}
+              value={birthDate}
               masked
             />
             <div className="sm:col-span-2">
               <InfoItem
                 icon={CreditCard}
                 label="Payee Name"
-                value={employeeData.payeeName}
+                value={profile.personalInfo.payeeName}
               />
             </div>
           </div>
@@ -400,19 +394,19 @@ export default function MyInfo() {
                 <InfoItem
                   icon={MapPin}
                   label="Street"
-                  value={employeeData.street}
+                  value={profile.contact.address.street}
                 />
               </div>
-              <SimpleInfoItem label="City" value={employeeData.city} />
+              <SimpleInfoItem label="City" value={profile.contact.address.city} />
               <SimpleInfoItem
                 label="Province/State"
-                value={employeeData.provinceState}
+                value={provinceState}
               />
               <SimpleInfoItem
                 label="Postal/Zip Code"
-                value={employeeData.postalZipCode}
+                value={profile.contact.address.postalCode}
               />
-              <SimpleInfoItem label="Country" value={employeeData.country} />
+              <SimpleInfoItem label="Country" value={country} />
             </div>
 
             {/* Phone Numbers */}
@@ -421,34 +415,34 @@ export default function MyInfo() {
                 <InfoItem
                   icon={Phone}
                   label="Phone 1"
-                  value={employeeData.phone1}
+                  value={profile.contact.phones.primary}
                 />
-                {employeeData.phone2 && (
-                  <SimpleInfoItem label="Phone 2" value={employeeData.phone2} />
+                {profile.contact.phones.secondary && (
+                  <SimpleInfoItem label="Phone 2" value={profile.contact.phones.secondary} />
                 )}
-                {employeeData.phone3 && (
-                  <SimpleInfoItem label="Phone 3" value={employeeData.phone3} />
+                {profile.contact.phones.mobile && (
+                  <SimpleInfoItem label="Phone 3" value={profile.contact.phones.mobile} />
                 )}
               </div>
             </div>
 
-                  {/* Email Addresses */}
-                  <div className="pt-3 border-t border-border/50">
-                    <div className="space-y-4">
-                      <InfoItem
-                        icon={Mail}
-                        label="Email 1"
-                        value={employeeData.email1}
-                      />
-                      {employeeData.email2 && (
-                        <InfoItem
-                          icon={Mail}
-                          label="Email 2"
-                          value={employeeData.email2}
-                        />
-                      )}
-                    </div>
-                  </div>
+            {/* Email Addresses */}
+            <div className="pt-3 border-t border-border/50">
+              <div className="space-y-4">
+                <InfoItem
+                  icon={Mail}
+                  label="Email 1"
+                  value={profile.contact.emails.primary}
+                />
+                {profile.contact.emails.secondary && (
+                  <InfoItem
+                    icon={Mail}
+                    label="Email 2"
+                    value={profile.contact.emails.secondary}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </SectionCard>
 
@@ -463,11 +457,11 @@ export default function MyInfo() {
             </Button>
           }
         >
-          {employeeData.emergencyContacts.length > 0 ? (
+          {profile.emergencyContacts.length > 0 ? (
             <div className="space-y-4">
-              {employeeData.emergencyContacts.map((contact, index) => (
+              {profile.emergencyContacts.map((contact) => (
                 <div
-                  key={index}
+                  key={contact.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
                 >
                   <div className="flex items-center gap-3">
@@ -479,13 +473,15 @@ export default function MyInfo() {
                         {contact.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {contact.relationship} • {contact.phone}
+                        {contact.relationship} • {contact.phoneNumber}
                       </p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    Primary
-                  </Badge>
+                  {contact.isPrimary && (
+                    <Badge variant="secondary" className="text-xs">
+                      Primary
+                    </Badge>
+                  )}
                 </div>
               ))}
             </div>
@@ -503,7 +499,7 @@ export default function MyInfo() {
               <InfoItem
                 icon={Calendar}
                 label="Hire Date"
-                value={employeeData.hireDate}
+                value={hireDate}
               />
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 p-2 rounded-lg bg-primary/10">
@@ -516,12 +512,12 @@ export default function MyInfo() {
                   <div className="mt-1">
                     <Badge
                       variant={
-                        employeeData.employmentType === "Full Time"
+                        profile.workAssignment.employmentType === "Full Time"
                           ? "default"
                           : "secondary"
                       }
                     >
-                      {employeeData.employmentType}
+                      {profile.workAssignment.employmentType}
                     </Badge>
                   </div>
                 </div>
@@ -529,17 +525,17 @@ export default function MyInfo() {
               <InfoItem
                 icon={Briefcase}
                 label="Position"
-                value={employeeData.position}
+                value={profile.workAssignment.position.name}
               />
               <InfoItem
                 icon={Building2}
                 label="Department"
-                value={employeeData.department}
+                value={profile.workAssignment.department.name}
               />
               <InfoItem
                 icon={MapPin}
                 label="Work Location"
-                value={employeeData.workLocation}
+                value={profile.workAssignment.workLocation.name}
               />
             </div>
 
@@ -550,25 +546,23 @@ export default function MyInfo() {
               </p>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors">
                 <Avatar className="h-10 w-10">
-                  {employeeData.reportsTo.avatar ? (
+                  {profile.workAssignment.reportsTo.avatarUrl ? (
                     <AvatarImage
-                      src={employeeData.reportsTo.avatar}
-                      alt={employeeData.reportsTo.name}
+                      src={profile.workAssignment.reportsTo.avatarUrl}
+                      alt={managerName}
                     />
                   ) : null}
                   <AvatarFallback className="bg-primary/20 text-primary">
-                    {employeeData.reportsTo.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {profile.workAssignment.reportsTo.firstName[0]}
+                    {profile.workAssignment.reportsTo.lastName[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium text-foreground">
-                    {employeeData.reportsTo.name}
+                    {managerName}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {employeeData.reportsTo.title}
+                    {profile.workAssignment.reportsTo.positionTitle}
                   </p>
                 </div>
               </div>
@@ -583,18 +577,18 @@ export default function MyInfo() {
           <InfoItem
             icon={DollarSign}
             label="Base Pay"
-            value={employeeData.basePay}
+            value={payData.basePay}
             masked
           />
           <InfoItem
             icon={CreditCard}
             label="Direct Deposit"
-            value={employeeData.directDeposit}
+            value={payData.directDeposit}
           />
           <InfoItem
             icon={Calendar}
             label="Last Pay Date"
-            value={employeeData.lastPayDate}
+            value={payData.lastPayDate}
           />
         </div>
         <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-border/50">
@@ -644,7 +638,7 @@ export default function MyInfo() {
                     Province of Employment
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.provinceOfEmployment}
+                    {payData.taxation.provinceOfEmployment}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -652,7 +646,7 @@ export default function MyInfo() {
                     Federal Tax Status
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.federalTax}
+                    {payData.taxation.federalTax}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -660,7 +654,7 @@ export default function MyInfo() {
                     Provincial Tax Status
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.provincialTax}
+                    {payData.taxation.provincialTax}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -668,7 +662,7 @@ export default function MyInfo() {
                     CPP/QPP Status
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.cppQppStatus}
+                    {payData.taxation.cppQppStatus}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -676,7 +670,7 @@ export default function MyInfo() {
                     QPIP Status
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.qpip}
+                    {payData.taxation.qpip}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -684,7 +678,7 @@ export default function MyInfo() {
                     Year-End Form Language
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.yearEndFormLanguage}
+                    {payData.taxation.yearEndFormLanguage}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -692,7 +686,7 @@ export default function MyInfo() {
                     Exemptions
                   </p>
                   <p className="text-sm font-medium">
-                    {employeeData.taxation.exemptions}
+                    {payData.taxation.exemptions}
                   </p>
                 </div>
               </div>
