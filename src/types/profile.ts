@@ -66,6 +66,8 @@ export interface ReportsTo {
   lastName: string;
   positionTitle: string;
   avatarUrl: string | null;
+  profilePicture: string | null;
+  profilePictureMediaType: string | null;
 }
 
 export interface EmergencyContact {
