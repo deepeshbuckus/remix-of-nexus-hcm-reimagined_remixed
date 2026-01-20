@@ -19,6 +19,7 @@ import LocationExceptions from "./pages/LocationExceptions";
 import GeofenceSettings from "./pages/GeofenceSettings";
 import ManagerRequestDetails from "./pages/ManagerRequestDetails";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -60,7 +61,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ViewProvider>
-          <AppContent />
+          <Routes>
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
         </ViewProvider>
       </BrowserRouter>
     </TooltipProvider>
