@@ -8,7 +8,7 @@ const API_BASE_URL = "http://localhost:8080";
  * @returns ProfileResponse
  */
 export async function getEmployeeProfile(id: string): Promise<ProfileResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/people/${id}/profile`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/employees/${id}/profile`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch profile: ${response.status} ${response.statusText}`);
