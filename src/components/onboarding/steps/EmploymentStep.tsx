@@ -65,12 +65,18 @@ export function EmploymentStep({ data, onUpdate }: EmploymentStepProps) {
 
         <div className="space-y-2">
           <Label htmlFor="manager">Manager</Label>
-          <Input
-            id="manager"
-            value={data.manager}
-            onChange={(e) => onUpdate({ manager: e.target.value })}
-            placeholder="e.g., John Smith"
-          />
+          <Select value={data.manager} onValueChange={(value) => onUpdate({ manager: value })}>
+            <SelectTrigger id="manager">
+              <SelectValue placeholder="Select manager" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sarah-chen">Sarah Chen</SelectItem>
+              <SelectItem value="michael-rodriguez">Michael Rodriguez</SelectItem>
+              <SelectItem value="emily-johnson">Emily Johnson</SelectItem>
+              <SelectItem value="david-kim">David Kim</SelectItem>
+              <SelectItem value="jennifer-wong">Jennifer Wong</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
