@@ -6,7 +6,6 @@ import { PersonalInfoStep } from '@/components/onboarding/steps/PersonalInfoStep
 import { ContactAddressStep } from '@/components/onboarding/steps/ContactAddressStep';
 import { EmploymentStep } from '@/components/onboarding/steps/EmploymentStep';
 import { EmergencyContactStep } from '@/components/onboarding/steps/EmergencyContactStep';
-import { PayrollStep } from '@/components/onboarding/steps/PayrollStep';
 import { DocumentsStep } from '@/components/onboarding/steps/DocumentsStep';
 import { ReviewStep } from '@/components/onboarding/steps/ReviewStep';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -72,13 +71,6 @@ export default function Onboarding() {
           <EmergencyContactStep
             data={data.emergencyContact}
             onUpdate={(updates) => updateData('emergencyContact', updates)}
-          />
-        );
-      case 'payroll':
-        return (
-          <PayrollStep
-            data={data.payroll}
-            onUpdate={(updates) => updateData('payroll', updates)}
           />
         );
       case 'documents':

@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { User, Phone, Users, Wallet, FileText } from 'lucide-react';
+import { User, Phone, Users, FileText } from 'lucide-react';
 
 const sections = [
   {
@@ -16,11 +16,6 @@ const sections = [
     icon: Users,
     title: 'Emergency contact',
     description: 'Who to contact in case of emergency',
-  },
-  {
-    icon: Wallet,
-    title: 'Payroll info',
-    description: 'Bank details for direct deposit',
   },
   {
     icon: FileText,
