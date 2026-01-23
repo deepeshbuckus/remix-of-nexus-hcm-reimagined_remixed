@@ -55,12 +55,21 @@ export function EmploymentStep({ data, onUpdate }: EmploymentStepProps) {
 
         <div className="space-y-2">
           <Label htmlFor="roleDepartment">Role / Department</Label>
-          <Input
-            id="roleDepartment"
-            value={data.roleDepartment}
-            onChange={(e) => onUpdate({ roleDepartment: e.target.value })}
-            placeholder="e.g., Software Developer / Engineering"
-          />
+          <Select value={data.roleDepartment} onValueChange={(value) => onUpdate({ roleDepartment: value })}>
+            <SelectTrigger id="roleDepartment">
+              <SelectValue placeholder="Select role / department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="software-developer-engineering">Software Developer / Engineering</SelectItem>
+              <SelectItem value="product-manager-product">Product Manager / Product</SelectItem>
+              <SelectItem value="designer-design">Designer / Design</SelectItem>
+              <SelectItem value="analyst-finance">Analyst / Finance</SelectItem>
+              <SelectItem value="coordinator-hr">Coordinator / Human Resources</SelectItem>
+              <SelectItem value="specialist-marketing">Specialist / Marketing</SelectItem>
+              <SelectItem value="associate-sales">Associate / Sales</SelectItem>
+              <SelectItem value="manager-operations">Manager / Operations</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
