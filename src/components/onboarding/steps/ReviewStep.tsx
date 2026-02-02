@@ -49,6 +49,7 @@ export function ReviewStep({ data, onEditSection }: ReviewStepProps) {
     personal: !data.personalInfo.firstName || !data.personalInfo.lastName || !data.personalInfo.dateOfBirth,
     contact: !data.contact.mobilePhone || !data.contact.addressLine1 || !data.contact.city || !data.contact.province || !data.contact.postalCode,
     emergency: !data.emergencyContact.contactName || !data.emergencyContact.relationship || !data.emergencyContact.phoneNumber,
+    payroll: !data.payroll.institutionNumber || !data.payroll.transitNumber || !data.payroll.accountNumber || !data.payroll.accountHolderName || !data.payroll.taxProvince || !data.payroll.td1FormOption,
     documents: !data.documents.governmentId || !data.documents.directDepositProof,
   };
 
@@ -130,6 +131,28 @@ export function ReviewStep({ data, onEditSection }: ReviewStepProps) {
             )}
           </div>
           {missingRequired.emergency && (
+            <div className="flex items-center gap-1.5 mt-3 text-destructive text-xs">
+              <AlertCircle className="h-3 w-3" />
+              Missing required fields
+            </div>
+          )}
+        </Section>
+
+        <Section title="Payroll" step="payroll" onEdit={() => onEditSection('payroll')}>
+          <div className="space-y-0.5">
+            <ReviewItem label="Bank name" value={data.payroll.bankName} />
+            <ReviewItem label="Institution #" value={data.payroll.institutionNumber} />
+            <ReviewItem label="Transit #" value={data.payroll.transitNumber} />
+            <ReviewItem label="Account #" value={data.payroll.accountNumber ? '****' + data.payroll.accountNumber.slice(-4) : undefined} />
+            <ReviewItem label="Account holder" value={data.payroll.accountHolderName} />
+            <Separator className="my-2" />
+            <ReviewItem label="Tax province" value={data.payroll.taxProvince} />
+            <ReviewItem label="TD1 form" value={
+              data.payroll.td1FormOption === 'digital' ? 'Complete digitally' : 
+              data.payroll.td1FormOption === 'paper' ? 'Paper form' : undefined
+            } />
+          </div>
+          {missingRequired.payroll && (
             <div className="flex items-center gap-1.5 mt-3 text-destructive text-xs">
               <AlertCircle className="h-3 w-3" />
               Missing required fields
