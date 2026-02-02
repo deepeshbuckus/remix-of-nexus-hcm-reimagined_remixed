@@ -65,6 +65,7 @@ export type OnboardingStep =
   | 'contact'
   | 'employment'
   | 'emergency'
+  | 'payroll'
   | 'documents'
   | 'review';
 
@@ -74,8 +75,9 @@ export const ONBOARDING_STEPS: { id: OnboardingStep; label: string; number: numb
   { id: 'contact', label: 'Contact', number: 3 },
   { id: 'employment', label: 'Employment', number: 4 },
   { id: 'emergency', label: 'Emergency', number: 5 },
-  { id: 'documents', label: 'Documents', number: 6 },
-  { id: 'review', label: 'Review', number: 7 },
+  { id: 'payroll', label: 'Payroll', number: 6 },
+  { id: 'documents', label: 'Documents', number: 7 },
+  { id: 'review', label: 'Review', number: 8 },
 ];
 
 export const initialOnboardingData: OnboardingData = {
