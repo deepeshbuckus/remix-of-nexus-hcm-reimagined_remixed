@@ -1,149 +1,301 @@
 
 
-## Add Payroll Back to Onboarding Flow
+## Integrate Compensation API Data into MyInfo Profile Page
 
-This plan restores the payroll step to the onboarding wizard, reversing the previous removal.
-
-### Summary of Changes
-
-The payroll step will be added back between Emergency Contact and Documents, restoring the original 8-step flow.
+This plan replaces the hardcoded `payData` mock object with real backend data by extending the profile API response and updating the frontend to consume it.
 
 ---
 
-### Files to Modify
+### Summary of Changes
 
-| File | Change |
+| Area | Change |
 |------|--------|
-| `src/types/onboarding.ts` | Add `'payroll'` to step type and renumber steps |
-| `src/components/onboarding/steps/WelcomeStep.tsx` | Add "Payroll info" to the "What we'll collect" list |
-| `src/pages/Onboarding.tsx` | Import PayrollStep and add case to renderStep |
-| `src/components/onboarding/steps/ReviewStep.tsx` | Add Payroll section and validation |
+| Types | Add `Compensation` interface to `ProfileResponse` |
+| Service | No changes (same endpoint returns extended data) |
+| Transformers | Add `formatCurrency` and `formatPayFrequency` utilities |
+| MyInfo Page | Replace `payData` mock with API data from `profile.compensation` |
+
+---
+
+### API Contract Extension
+
+The existing `GET /api/v1/employees/{id}/profile` endpoint will be extended to include a `compensation` object:
+
+```json
+{
+  "id": "...",
+  "employeeNumber": 1004,
+  "personalInfo": { ... },
+  "contact": { ... },
+  "workAssignment": { ... },
+  "emergencyContacts": [ ... ],
+  "compensation": {
+    "basePay": "85000.00",
+    "payFrequency": "Bi-weekly",
+    "currency": "CAD",
+    "lastPayDate": "2025-11-29",
+    "directDeposit": {
+      "bankName": "TD Bank",
+      "accountLast4": "4521"
+    },
+    "taxation": {
+      "provinceOfEmployment": "ON",
+      "federalTaxStatus": "Subject to Federal Tax",
+      "provincialTaxStatus": "Subject to Provincial Tax",
+      "cppQppStatus": "Subject to CPP",
+      "qpipStatus": "Not Applicable",
+      "yearEndFormLanguage": "EN",
+      "exemptions": "None"
+    }
+  }
+}
+```
 
 ---
 
 ### Technical Details
 
-#### 1. Update Step Configuration (`src/types/onboarding.ts`)
+#### 1. Extend Type Definitions (`src/types/profile.ts`)
 
-**Add to `OnboardingStep` type:**
+Add new interfaces for compensation data:
+
 ```typescript
-export type OnboardingStep = 
-  | 'welcome'
-  | 'personal'
-  | 'contact'
-  | 'employment'
-  | 'emergency'
-  | 'payroll'      // Add this back
-  | 'documents'
-  | 'review';
+export interface Compensation {
+  basePay: string;           // Decimal string for precision
+  payFrequency: string;      // "Weekly", "Bi-weekly", "Semi-monthly", "Monthly"
+  currency: string;          // "CAD", "USD"
+  lastPayDate: string;       // ISO date: "2025-11-29"
+  directDeposit: DirectDeposit;
+  taxation: Taxation;
+}
+
+export interface DirectDeposit {
+  bankName: string;
+  accountLast4: string;      // Masked: only last 4 digits
+}
+
+export interface Taxation {
+  provinceOfEmployment: string;    // Province code: "ON"
+  federalTaxStatus: string;
+  provincialTaxStatus: string;
+  cppQppStatus: string;
+  qpipStatus: string;
+  yearEndFormLanguage: string;     // Language code: "EN"
+  exemptions: string;
+}
 ```
 
-**Update `ONBOARDING_STEPS` array (8 steps):**
+Update `ProfileResponse` to include the new field:
+
 ```typescript
-export const ONBOARDING_STEPS = [
-  { id: 'welcome', label: 'Welcome', number: 1 },
-  { id: 'personal', label: 'Personal', number: 2 },
-  { id: 'contact', label: 'Contact', number: 3 },
-  { id: 'employment', label: 'Employment', number: 4 },
-  { id: 'emergency', label: 'Emergency', number: 5 },
-  { id: 'payroll', label: 'Payroll', number: 6 },   // Add back
-  { id: 'documents', label: 'Documents', number: 7 },
-  { id: 'review', label: 'Review', number: 8 },
-];
+export interface ProfileResponse {
+  id: string;
+  employeeNumber: number;
+  personalInfo: PersonalInfo;
+  contact: Contact;
+  workAssignment: WorkAssignment;
+  emergencyContacts: EmergencyContact[];
+  compensation: Compensation;  // Add this
+}
 ```
 
-#### 2. Update Welcome Step (`src/components/onboarding/steps/WelcomeStep.tsx`)
+#### 2. Add Transformer Utilities (`src/utils/profileTransformers.ts`)
 
-Add payroll info section and Wallet icon import:
+Add new formatting functions:
+
 ```typescript
-import { User, Phone, Users, Wallet, FileText } from 'lucide-react';
+/**
+ * Format currency amount for display
+ * @example formatCurrency("85000.00", "CAD") -> "$85,000.00 CAD"
+ */
+export function formatCurrency(
+  amount: string | null | undefined,
+  currency: string = "CAD"
+): string {
+  if (!amount) return "";
+  
+  const num = parseFloat(amount);
+  if (isNaN(num)) return amount;
+  
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: currency,
+  }).format(num);
+}
 
-const sections = [
-  { icon: User, title: 'Personal info', description: 'Name, date of birth, SIN' },
-  { icon: Phone, title: 'Contact and Address', description: 'Phone, email, mailing address' },
-  { icon: Users, title: 'Emergency contact', description: 'Who to contact in case of emergency' },
-  { icon: Wallet, title: 'Payroll info', description: 'Bank details for direct deposit' },
-  { icon: FileText, title: 'Documents', description: 'ID, void cheque, work permit' },
-];
+/**
+ * Format direct deposit display string
+ * @example formatDirectDeposit("TD Bank", "4521") -> "TD Bank ••••4521"
+ */
+export function formatDirectDeposit(
+  bankName: string | null | undefined,
+  accountLast4: string | null | undefined
+): string {
+  if (!bankName && !accountLast4) return "";
+  if (!accountLast4) return bankName || "";
+  return `${bankName || "Bank"} ••••${accountLast4}`;
+}
 ```
 
-#### 3. Update Onboarding Page (`src/pages/Onboarding.tsx`)
+#### 3. Update MyInfo Page (`src/pages/MyInfo.tsx`)
 
-Add import and case block:
+**Remove mock data** (lines 236-250):
+
 ```typescript
-import { PayrollStep } from '@/components/onboarding/steps/PayrollStep';
-
-// In renderStep():
-case 'payroll':
-  return (
-    <PayrollStep
-      data={data.payroll}
-      onUpdate={(updates) => updateData('payroll', updates)}
-    />
-  );
-```
-
-#### 4. Update Review Step (`src/components/onboarding/steps/ReviewStep.tsx`)
-
-**Add payroll validation:**
-```typescript
-const missingRequired = {
-  personal: ...,
-  contact: ...,
-  emergency: ...,
-  payroll: !data.payroll.institutionNumber || !data.payroll.transitNumber || 
-           !data.payroll.accountNumber || !data.payroll.accountHolderName || 
-           !data.payroll.taxProvince || !data.payroll.td1FormOption,
-  documents: ...,
+// DELETE THIS ENTIRE BLOCK
+const payData = {
+  basePay: "••••••",
+  directDeposit: "TD Bank ••••4521",
+  ...
 };
 ```
 
-**Add Payroll section (after Emergency Contact, before Documents):**
+**Add new imports:**
+
 ```typescript
-<Section title="Payroll" step="payroll" onEdit={() => onEditSection('payroll')}>
-  <div className="space-y-0.5">
-    <ReviewItem label="Bank name" value={data.payroll.bankName} />
-    <ReviewItem label="Institution #" value={data.payroll.institutionNumber} />
-    <ReviewItem label="Transit #" value={data.payroll.transitNumber} />
-    <ReviewItem label="Account #" value={data.payroll.accountNumber ? 
-      '****' + data.payroll.accountNumber.slice(-4) : undefined} />
-    <ReviewItem label="Account holder" value={data.payroll.accountHolderName} />
-    <Separator className="my-2" />
-    <ReviewItem label="Tax province" value={data.payroll.taxProvince} />
-    <ReviewItem label="TD1 form" value={
-      data.payroll.td1FormOption === 'digital' ? 'Complete digitally' : 
-      data.payroll.td1FormOption === 'paper' ? 'Paper form' : undefined
-    } />
+import {
+  // ... existing imports
+  formatCurrency,
+  formatDirectDeposit,
+} from "@/utils/profileTransformers";
+```
+
+**Update Pay & Compensation section** (lines 580-610):
+
+Replace hardcoded `payData` references with API data:
+
+```tsx
+<SectionCard title="Pay & Compensation Summary" icon={DollarSign}>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <InfoItem
+      icon={DollarSign}
+      label="Base Pay"
+      value={formatCurrency(profile.compensation.basePay, profile.compensation.currency)}
+      masked
+    />
+    <InfoItem
+      icon={CreditCard}
+      label="Direct Deposit"
+      value={formatDirectDeposit(
+        profile.compensation.directDeposit.bankName,
+        profile.compensation.directDeposit.accountLast4
+      )}
+    />
+    <InfoItem
+      icon={Calendar}
+      label="Last Pay Date"
+      value={formatDisplayDate(profile.compensation.lastPayDate)}
+    />
   </div>
-  {missingRequired.payroll && (
-    <div className="flex items-center gap-1.5 mt-3 text-destructive text-xs">
-      <AlertCircle className="h-3 w-3" />
-      Missing required fields
-    </div>
-  )}
-</Section>
+  {/* ... buttons remain unchanged */}
+</SectionCard>
+```
+
+**Update Payroll & Tax Details section** (lines 639-698):
+
+Replace `payData.taxation` with `profile.compensation.taxation`:
+
+```tsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 p-4 rounded-lg bg-muted/30">
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      Province of Employment
+    </p>
+    <p className="text-sm font-medium">
+      {mapProvinceCode(profile.compensation.taxation.provinceOfEmployment, "CA")}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      Federal Tax Status
+    </p>
+    <p className="text-sm font-medium">
+      {profile.compensation.taxation.federalTaxStatus}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      Provincial Tax Status
+    </p>
+    <p className="text-sm font-medium">
+      {profile.compensation.taxation.provincialTaxStatus}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      CPP/QPP Status
+    </p>
+    <p className="text-sm font-medium">
+      {profile.compensation.taxation.cppQppStatus}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      QPIP Status
+    </p>
+    <p className="text-sm font-medium">
+      {profile.compensation.taxation.qpipStatus}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      Year-End Form Language
+    </p>
+    <p className="text-sm font-medium">
+      {mapLanguageCode(profile.compensation.taxation.yearEndFormLanguage)}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+      Exemptions
+    </p>
+    <p className="text-sm font-medium">
+      {profile.compensation.taxation.exemptions}
+    </p>
+  </div>
+</div>
 ```
 
 ---
 
-### Restored Onboarding Flow
+### Data Flow After Implementation
 
 ```text
-Current (7 steps):
-Welcome -> Personal -> Contact -> Employment -> Emergency -> Documents -> Review
-
-After (8 steps):
-Welcome -> Personal -> Contact -> Employment -> Emergency -> Payroll -> Documents -> Review
+Backend API
+    │
+    ▼
+GET /api/v1/employees/{id}/profile
+    │
+    ├─► personalInfo
+    ├─► contact
+    ├─► workAssignment
+    ├─► emergencyContacts
+    └─► compensation (NEW)
+           │
+           ├─► basePay, payFrequency, currency, lastPayDate
+           ├─► directDeposit { bankName, accountLast4 }
+           └─► taxation { provinceOfEmployment, federalTaxStatus, ... }
+                   │
+                   ▼
+              MyInfo Page
+              (formatCurrency, formatDirectDeposit, mapProvinceCode)
 ```
+
+---
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/types/profile.ts` | Add `Compensation`, `DirectDeposit`, `Taxation` interfaces |
+| `src/utils/profileTransformers.ts` | Add `formatCurrency`, `formatDirectDeposit` functions |
+| `src/pages/MyInfo.tsx` | Remove `payData` mock, use `profile.compensation` |
 
 ---
 
 ### No Changes Needed
 
-The following are already in place:
-
-- `src/components/onboarding/steps/PayrollStep.tsx` - Component exists
-- `PayrollInfo` interface in `src/types/onboarding.ts` - Already defined
-- `payroll` field in `OnboardingData` - Already included
-- `payroll` initial state in `initialOnboardingData` - Already configured
+- `src/services/profileService.ts` - Same endpoint, just extended response
+- `src/hooks/useEmployeeProfile.ts` - Already returns `ProfileResponse`
+- React Query caching - Already configured with 5-minute stale time
 
