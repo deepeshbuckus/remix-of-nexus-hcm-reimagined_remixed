@@ -197,3 +197,35 @@ export function buildProfilePictureUrl(
   if (!base64 || !mediaType) return null;
   return `data:${mediaType};base64,${base64}`;
 }
+
+/**
+ * Format currency amount for display
+ * @example formatCurrency("85000.00", "CAD") -> "$85,000.00"
+ */
+export function formatCurrency(
+  amount: string | null | undefined,
+  currency: string = "CAD"
+): string {
+  if (!amount) return "";
+  
+  const num = parseFloat(amount);
+  if (isNaN(num)) return amount;
+  
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: currency,
+  }).format(num);
+}
+
+/**
+ * Format direct deposit display string
+ * @example formatDirectDeposit("TD Bank", "4521") -> "TD Bank ••••4521"
+ */
+export function formatDirectDeposit(
+  bankName: string | null | undefined,
+  accountLast4: string | null | undefined
+): string {
+  if (!bankName && !accountLast4) return "";
+  if (!accountLast4) return bankName || "";
+  return `${bankName || "Bank"} ••••${accountLast4}`;
+}

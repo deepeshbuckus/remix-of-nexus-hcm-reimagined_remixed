@@ -47,6 +47,8 @@ import {
   mapProvinceCode,
   formatFullName,
   buildProfilePictureUrl,
+  formatCurrency,
+  formatDirectDeposit,
 } from "@/utils/profileTransformers";
 
 // Re-export the API types for external consumers
@@ -233,21 +235,6 @@ function ProfileError({ message }: { message: string }) {
   );
 }
 
-// Mock data for Pay & Compensation (not from API yet)
-const payData = {
-  basePay: "••••••",
-  directDeposit: "TD Bank ••••4521",
-  lastPayDate: "November 29, 2025",
-  taxation: {
-    provinceOfEmployment: "Ontario",
-    federalTax: "Subject to Federal Tax",
-    provincialTax: "Subject to Provincial Tax",
-    cppQppStatus: "Subject to CPP",
-    qpip: "Not Applicable",
-    yearEndFormLanguage: "English",
-    exemptions: "None",
-  },
-};
 
 export default function MyInfo() {
   const [taxDetailsOpen, setTaxDetailsOpen] = useState(false);
@@ -583,18 +570,21 @@ export default function MyInfo() {
           <InfoItem
             icon={DollarSign}
             label="Base Pay"
-            value={payData.basePay}
+            value={formatCurrency(profile.compensation.basePay, profile.compensation.currency)}
             masked
           />
           <InfoItem
             icon={CreditCard}
             label="Direct Deposit"
-            value={payData.directDeposit}
+            value={formatDirectDeposit(
+              profile.compensation.directDeposit.bankName,
+              profile.compensation.directDeposit.accountLast4
+            )}
           />
           <InfoItem
             icon={Calendar}
             label="Last Pay Date"
-            value={payData.lastPayDate}
+            value={formatDisplayDate(profile.compensation.lastPayDate)}
           />
         </div>
         <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-border/50">
@@ -644,7 +634,7 @@ export default function MyInfo() {
                     Province of Employment
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.provinceOfEmployment}
+                    {mapProvinceCode(profile.compensation.taxation.provinceOfEmployment, "CA")}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -652,7 +642,7 @@ export default function MyInfo() {
                     Federal Tax Status
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.federalTax}
+                    {profile.compensation.taxation.federalTaxStatus}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -660,7 +650,7 @@ export default function MyInfo() {
                     Provincial Tax Status
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.provincialTax}
+                    {profile.compensation.taxation.provincialTaxStatus}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -668,7 +658,7 @@ export default function MyInfo() {
                     CPP/QPP Status
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.cppQppStatus}
+                    {profile.compensation.taxation.cppQppStatus}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -676,7 +666,7 @@ export default function MyInfo() {
                     QPIP Status
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.qpip}
+                    {profile.compensation.taxation.qpipStatus}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -684,7 +674,7 @@ export default function MyInfo() {
                     Year-End Form Language
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.yearEndFormLanguage}
+                    {mapLanguageCode(profile.compensation.taxation.yearEndFormLanguage)}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -692,7 +682,7 @@ export default function MyInfo() {
                     Exemptions
                   </p>
                   <p className="text-sm font-medium">
-                    {payData.taxation.exemptions}
+                    {profile.compensation.taxation.exemptions}
                   </p>
                 </div>
               </div>
