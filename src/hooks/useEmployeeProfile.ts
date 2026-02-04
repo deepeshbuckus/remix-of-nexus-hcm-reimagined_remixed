@@ -3,7 +3,7 @@ import { getEmployeeProfile } from "@/services/profileService";
 import type { ProfileResponse } from "@/types/profile";
 
 // Temporary hardcoded employee ID - replace with auth context later
-const CURRENT_EMPLOYEE_ID = "00000000-0000-0000-0000-000000000004";
+const CURRENT_EMPLOYEE_ID = "10000000-0000-0000-0000-000000000001";
 
 /**
  * React Query hook for fetching employee profile data
