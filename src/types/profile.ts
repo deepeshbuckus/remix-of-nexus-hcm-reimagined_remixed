@@ -7,6 +7,7 @@ export interface ProfileResponse {
   contact: Contact;
   workAssignment: WorkAssignment;
   emergencyContacts: EmergencyContact[];
+  compensation: Compensation;
 }
 
 export interface PersonalInfo {
@@ -76,4 +77,28 @@ export interface EmergencyContact {
   relationship: string;
   phoneNumber: string;
   isPrimary: boolean;
+}
+
+export interface Compensation {
+  basePay: string;
+  payFrequency: string;
+  currency: string;
+  lastPayDate: string;
+  directDeposit: DirectDeposit;
+  taxation: Taxation;
+}
+
+export interface DirectDeposit {
+  bankName: string;
+  accountLast4: string;
+}
+
+export interface Taxation {
+  provinceOfEmployment: string;
+  federalTaxStatus: string;
+  provincialTaxStatus: string;
+  cppQppStatus: string;
+  qpipStatus: string;
+  yearEndFormLanguage: string;
+  exemptions: string;
 }
